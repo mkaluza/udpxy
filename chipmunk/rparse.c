@@ -159,7 +159,7 @@ parse_param( const char* s, size_t slen,
 int
 parse_udprelay( const char*  opt, size_t optlen,
                 char* addr,       size_t addrlen,
-                uint16_t* port )
+                uint16_t* port,   char* if_addr)
 {
     int rc = 1;
     size_t n;
@@ -194,6 +194,12 @@ parse_udprelay( const char*  opt, size_t optlen,
         }
 
         rc = 0;
+
+        char *at = strstr( s+n, "@" );
+        if( at == NULL) break;
+
+        strncpy( if_addr, at+1, addrlen );
+        if_addr[ addrlen - 1 ] ='\0';
     }
     while(0);
 

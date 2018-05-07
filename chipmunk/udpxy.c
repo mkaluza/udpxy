@@ -677,13 +677,17 @@ udp_relay( int sockfd, struct server_ctx* ctx )
 
     const struct in_addr *mifaddr = &(ctx->mcast_inaddr);
 
+    char        if_addr[ IPADDR_STR_SIZE ];
+    struct in_addr altmifaddr;
+
     assert( (sockfd > 0) && ctx );
 
     TRACE( (void)tmfprintf( g_flog, "udp_relay : new_socket=[%d] param=[%s]\n",
                         sockfd, ctx->rq.param) );
     do {
+	bzero(if_addr, IPADDR_STR_SIZE);
         rc = parse_udprelay( ctx->rq.param, sizeof(ctx->rq.param),
-                mcast_addr, IPADDR_STR_SIZE, &port );
+                mcast_addr, IPADDR_STR_SIZE, &port, if_addr );
         if( 0 != rc ) {
             (void) tmfprintf( g_flog, "Error [%d] parsing parameters [%s]\n",
                             rc, ctx->rq.param );
@@ -698,6 +702,14 @@ udp_relay( int sockfd, struct server_ctx* ctx )
 
         addr.sin_family = AF_INET;
         addr.sin_port = htons( (short)port );
+
+	if( if_addr[0] == 0 ) break;
+        if( 1 != inet_aton(if_addr, &altmifaddr) ) {
+            (void) tmfprintf( g_flog, "Invalid address: [%s]\n", if_addr );
+            rc = ERR_INTERNAL;
+            break;
+        }
+	mifaddr = &altmifaddr;
 
     } while(0);
 
